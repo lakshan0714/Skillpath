@@ -1,45 +1,80 @@
-'use client'; // for app router — skip if using `pages/`
+"use client";
 
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import { useState } from "react";
 
 export default function SignupPage() {
-  const router=useRouter();
+  const router = useRouter();
   const [form, setForm] = useState({
     username: "",
     email: "",
     password: "",
-    role: "admin",
+    role: "user",
   });
-  
+
   const [agree, setAgree] = useState(false);
   const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({ username: '', email: '', password: '', role: '' });
+  const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({
+    username: "",
+    email: "",
+    password: "",
+    role: "",
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const validate = () => {
     let valid = true;
-    const errors = { username: '', email: '', password: '', role: '' };
+    const errors = { username: "", email: "", password: "", role: "" };
+
     if (!form.username || form.username.trim().length < 2) {
-      errors.username = 'Name must be at least 2 characters.';
+      errors.username = "Name must be at least 2 characters.";
       valid = false;
     }
     if (!form.email || !/^\S+@\S+\.\S+$/.test(form.email)) {
-      errors.email = 'Enter a valid email address.';
+      errors.email = "Enter a valid email address.";
       valid = false;
     }
-    if (!form.password || form.password.length < 6 || !/[A-Za-z]/.test(form.password) || !/\d/.test(form.password)) {
-      errors.password = 'Password must be at least 6 characters, include a letter and a number.';
+    if (
+      !form.password ||
+      form.password.length < 6 ||
+      !/[A-Za-z]/.test(form.password) ||
+      !/\d/.test(form.password)
+    ) {
+      errors.password =
+        "Password must be at least 6 characters, include a letter and a number.";
       valid = false;
     }
     if (!form.role) {
-      errors.role = 'Please select a role.';
+      errors.role = "Please select a role.";
       valid = false;
     }
+
     setFieldErrors(errors);
     return valid;
   };
@@ -51,131 +86,210 @@ export default function SignupPage() {
       setError("You must agree to the Terms and Privacy Policy.");
       return;
     }
-    setError("");
-    const res = await fetch(`http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/user/signup`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    
-    });
-    console.log(form);
 
-    if (res.ok) {
-      router.push("/auth/login");
-      alert("Signup success!");
-    } else {
-      const err = await res.json();
-      alert(err.detail || "Signup failed");
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/user/signup`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(form),
+        }
+      );
+
+      console.log(form);
+
+      if (res.ok) {
+        router.push("/login");
+        alert("Signup success!");
+      } else {
+        const err = await res.json();
+        setError(err.detail || "Signup failed");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <div className="flex flex-col items-center mb-4">
-          {/* <Image src="/images/logo.png" alt="Logo" width={90} height={90} /> */}
-          <h2 className="mt-2 text-xl font-bold text-center text-gray-900">Create your Account</h2>
-        </div>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="username" className="block text-xs font-medium text-gray-700">Name</label>
-            <input
-              name="username"
-              id="username"
-              placeholder="Name"
-              onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${fieldErrors.username ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm`}
-              required
-            />
-            {fieldErrors.username && <div className="text-red-500 text-xs mt-1">{fieldErrors.username}</div>}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="space-y-3 text-center pb-6">
+          {/* <div className="flex justify-center mb-2">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+              <div className="relative bg-primary/10 p-4 rounded-2xl">
+                <TrendingUp className="h-12 w-12 text-primary" />
+              </div>
+            </div>
+          </div> */}
+          <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
+          <CardDescription className="text-base">
+            Join SKILLPATH to access AI-powered adaptive learning and personalized skill development.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Full Name</Label>
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                placeholder="John Doe"
+                value={form.username}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="h-11"
+              />
+              {fieldErrors.username && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {fieldErrors.username}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="name@example.com"
+                value={form.email}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="h-11"
+              />
+              {fieldErrors.email && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {fieldErrors.email}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                className="h-11"
+              />
+              {fieldErrors.password && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {fieldErrors.password}
+                </p>
+              )}
+          
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="role">Account Type</Label>
+              <Select
+                name="role"
+                value={form.role}
+                onValueChange={(value: any) => setForm({ ...form, role: value })}
+                disabled={loading}
+              >
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select account type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  {/* <SelectItem value="admin">Admin</SelectItem> */}
+                </SelectContent>
+              </Select>
+              {fieldErrors.role && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {fieldErrors.role}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-start space-x-2 pt-2">
+              <Checkbox
+                id="agree"
+                checked={agree}
+                onCheckedChange={(checked: boolean) => setAgree(checked as boolean)}
+                disabled={loading}
+              />
+              <Label
+                htmlFor="agree"
+                className="text-sm font-normal leading-tight cursor-pointer"
+              >
+                I agree to the{" "}
+                <a href="#" className="text-primary hover:underline">
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a href="#" className="text-primary hover:underline">
+                  Privacy Policy
+                </a>
+              </Label>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full h-11" disabled={loading}>
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Creating account...</span>
+                </div>
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+
+        <CardFooter className="flex flex-col space-y-4 pb-8">
+          <div className="relative w-full">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">
+                Already have an account?
+              </span>
+            </div>
           </div>
-          <div>
-            <label htmlFor="email" className="block text-xs font-medium text-gray-700">Email</label>
-            <input
-              name="email"
-              id="email"
-              type="email"
-              placeholder="Email"
-              onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm`}
-              required
-            />
-            {fieldErrors.email && <div className="text-red-500 text-xs mt-1">{fieldErrors.email}</div>}
-          </div>
-          <div>
-            <label htmlFor="password" className="block text-xs font-medium text-gray-700">Password</label>
-            <input
-              name="password"
-              id="password"
-              type="password"
-              placeholder="Password"
-              onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${fieldErrors.password ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm`}
-              required
-            />
-            {fieldErrors.password && <div className="text-red-500 text-xs mt-1">{fieldErrors.password}</div>}
-          </div>
-          <div>
-            <label htmlFor="role" className="block text-xs font-medium text-gray-700">Role</label>
-            <select
-              name="role"
-              id="role"
-              onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${fieldErrors.role ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-amber-400 focus:border-blue-500 text-sm`}
-              value={form.role}
-              required
-            >
-              <option value="admin" >admin</option>
-              <option value="superadmin">superadmin</option>
-            </select>
-            {fieldErrors.role && <div className="text-red-500 text-xs mt-1">{fieldErrors.role}</div>}
-          </div>
-          <div className="flex items-center text-xs">
-            <input
-              id="agree"
-              type="checkbox"
-              checked={agree}
-              onChange={e => setAgree(e.target.checked)}
-              className="mr-2"
-              required
-            />
-            <label htmlFor="agree" className="text-gray-700">
-              I agree to the <a href="#" className="text-blue-600 hover:underline">Terms</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>.
-            </label>
-          </div>
-          {error && <div className="text-red-500 text-xs text-center">{error}</div>}
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-blue-700 text-white font-semibold rounded-md hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-2"
+
+          <Button
+            variant="outline"
+            className="w-full h-11"
+            onClick={() => router.push("/login")}
+            type="button"
           >
-            Sign Up
-          </button>
-        </form>
-        <div className="flex items-center my-4">
-          <div className="flex-grow h-px bg-gray-200" />
-          <span className="mx-2 text-xs text-gray-400">or</span>
-          <div className="flex-grow h-px bg-gray-200" />
-        </div>
-        <div className="flex gap-2 mb-2">
-          <button className="flex-1 flex items-center justify-center gap-2 border border-gray-300 rounded-md py-2 text-sm font-medium hover:bg-gray-50">
-             <img
-              src="/google-icon.svg"  
-              alt="Google"
-              className="w-4 h-4"
-            />
-            Sign up with Google
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-md py-2 text-sm font-medium hover:bg-blue-700">
-            <svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="currentColor" d="M22.675 0h-21.35C.6 0 0 .6 0 1.326v21.348C0 23.4.6 24 1.326 24h11.495v-9.294H9.692v-3.622h3.129V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.4 24 24 23.4 24 22.674V1.326C24 .6 23.4 0 22.675 0"/></svg>
-            Sign up with Facebook
-          </button>
-        </div>
-        <div className="text-center text-xs text-gray-600 mt-2">
-          Already have an account? <a href="/auth/login" className="text-blue-700 font-semibold hover:underline">Sign in</a>
-        </div>
-      </div>
+            Sign In
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

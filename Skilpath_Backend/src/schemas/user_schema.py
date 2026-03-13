@@ -4,8 +4,7 @@ import enum
 
 
 class UserRole(enum.Enum):
-    admin = "admin"
-    superadmin ="superadmin"
+    user ="user"
 
 
 

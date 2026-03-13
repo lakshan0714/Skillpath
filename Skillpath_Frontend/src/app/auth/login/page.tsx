@@ -1,84 +1,69 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
-
-  const BACKEND_HOST= process.env.NEXT_PUBLIC_BACKEND_HOST
-  const BACKEND_PORT=process.env.NEXT_PUBLIC_BACKEND_PORT 
+  const BACKEND_HOST = process.env.NEXT_PUBLIC_BACKEND_HOST;
+  const BACKEND_PORT = process.env.NEXT_PUBLIC_BACKEND_PORT;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' });
   const router = useRouter();
 
   useEffect(() => {
     const checkSession = async () => {
-      console.log(BACKEND_HOST)
       try {
-        const res = await fetch(`http://${BACKEND_HOST}:${BACKEND_PORT}/user/me`, {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `http://${BACKEND_HOST}:${BACKEND_PORT}/user/me`,
+          {
+            credentials: "include",
+          }
+        );
 
         if (res.ok) {
           const data = await res.json();
-          if (data?.data?.role === "admin") {
-            router.replace("/admin_dashboard/overview");
-          } else if (data?.data?.role === "superadmin") {
-            router.replace("/super_admin_dashboard/overview");
+          if (data?.data?.role === "user") {
+            router.replace("/user_dashboard/overview");
           }
         }
       } catch (err) {
-        // Not authenticated or network error, do nothing
+        // Not authenticated
       }
     };
     checkSession();
-  }, [router]);
-
-  const validate = () => {
-    let valid = true;
-    const errors = { email: '', password: '' };
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      errors.email = 'Enter a valid email address.';
-      valid = false;
-    }
-    if (!password) {
-      errors.password = 'Password is required.';
-      valid = false;
-    }
-    setFieldErrors(errors);
-    return valid;
-  };
+  }, [router, BACKEND_HOST, BACKEND_PORT]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
     setLoading(true);
     setError("");
+
     try {
-      const data1 = {
-        "email": email,
-        "password": password
-      }
-      console.log(data1)
-      const res = await fetch(`http://${BACKEND_HOST}:${BACKEND_PORT}/user/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data1),
-        credentials: "include"
-      });
+      const res = await fetch(
+        `http://${BACKEND_HOST}:${BACKEND_PORT}/user/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+          credentials: "include",
+        }
+      );
+
       const data = await res.json();
-      console.log(data)
+
       if (res.ok) {
-        if (data.data.role === "admin") {
-          router.push("/admin_dashboard/overview");
-        } else if (data.data.role === "superadmin") {
-          router.push("/super_admin_dashboard/overview");
+        if (data.data.role === "user") {
+          router.push("/user_dashboard/overview");
         } else {
           setError("Unknown user type");
         }
@@ -86,68 +71,138 @@ export default function LoginPage() {
         setError(data.message || "Login failed");
       }
     } catch (err) {
-      setError("Network error");
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-        <div className="flex flex-col items-center mb-6">
-          <Image src="/images/logo.png" alt="Logo" width={75} height={60} />
-          <p className=" text-sm text-gray-600">Welcome back!</p>
-          <h2 className="mt-8 text-xl font-bold text-center text-gray-900">Log in to your Account</h2>
-        </div>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label htmlFor="email" className="block font-sans text-xs font-medium  text-gray-700">Email</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              className={`mt-1 block w-full px-3 py-2 border ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm`}
-            />
-            {fieldErrors.email && <div className="text-red-500 text-xs mt-1">{fieldErrors.email}</div>}
-          </div>
-          <div>
-            <label htmlFor="password" className="block font-sans text-xs font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              className={`mt-1 block w-full px-3 py-2 border ${fieldErrors.password ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm`}
-            />
-            {fieldErrors.password && <div className="text-red-500 text-xs mt-1">{fieldErrors.password}</div>}
-          </div>
-          <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={e => setRemember(e.target.checked)}
-                className="mr-2"
-              />
-              Remember
-            </label>
-            <a href="/ (auth)/forgot-password" className="text-blue-800 font-semibold hover:underline">Forgot Password?</a>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-4">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className=" text-center pb-4">
+          {/* <div className="flex justify-center mb-2">
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+              <div className="relative bg-primary/10 p-4 rounded-2xl">
+                <TrendingUp className="h-12 w-12 text-primary" />
+              </div>
+            </div>
+          </div> */}
+        
 
+      <div className="flex justify-center">
+    
+      <img
+        src="/logo.png"
+        alt="SKILLPATH Logo"
+        className="h-24 w-24 "
+      />
+  
+
+</div>
+          <CardTitle className="text-3xl font-bold">SKILLPATH</CardTitle>
+          <CardDescription className="text-base">
+            Sign in to access AI-powered adaptive learning and personalized skill development.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+                className="h-11"
+              />
+            </div>
+
+            <div className="space-y-2">
+              {/* <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <a
+                  href="/forgot-password"
+                  className="text-sm text-primary hover:underline"
+                  tabIndex={-1}
+                >
+                  Forgot?
+                </a>
+              </div> */}
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+                className="h-11"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="remember"
+                checked={remember}
+                onCheckedChange={(checked: boolean) => setRemember(checked as boolean)}
+                disabled={loading}
+              />
+              <Label
+                htmlFor="remember"
+                className="text-sm font-normal cursor-pointer"
+              >
+                Remember me for 30 days
+              </Label>
+            </div>
+
+            {error && (
+              <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full h-11" disabled={loading}>
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Signing in...</span>
+                </div>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+          </form>
+        </CardContent>
+
+        <CardFooter className="flex flex-col space-y-4 pb-8">
+          <div className="relative w-full">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">
+                New to StockAI?
+              </span>
+            </div>
           </div>
-          {error && <div className="text-red-500 text-xs text-center">{error}</div>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 bg-blue-800 text-white font-semibold rounded-md hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mt-2"
+
+          <Button
+            variant="outline"
+            className="w-full h-11"
+            onClick={() => router.push("/auth/signup")}
+            type="button"
           >
-            {loading ? "Signing In..." : "Sign In"}
-          </button>
-        </form>
-      </div>
+            Create an Account
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

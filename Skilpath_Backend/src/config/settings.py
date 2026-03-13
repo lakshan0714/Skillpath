@@ -7,13 +7,13 @@ load_dotenv(override=True)
 
 class Settings:
     
-    #Intialize super admin credentials
-    SUPER_ADMIN_EMAIL = os.getenv("SUPER_ADMIN_EMAIL")
-    SUPER_ADMIN_PASSWORD =os.getenv("SUPER_ADMIN_PASSWORD")
+    # #Intialize super admin credentials
+    # SUPER_ADMIN_EMAIL = os.getenv("SUPER_ADMIN_EMAIL")
+    # SUPER_ADMIN_PASSWORD =os.getenv("SUPER_ADMIN_PASSWORD")
 
 
     #server config
-    PROJECT_NAME = "Sand Project"
+    PROJECT_NAME = "Skillpath Project"
     PORT= 8000
     HOST = "0.0.0.0"
     DEBUG = False
@@ -21,6 +21,7 @@ class Settings:
     
     # CORS Config
     BACKEND_CORS_ORIGINS = os.getenv("ALLOWED_ORIGINS")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
    
 
     COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")

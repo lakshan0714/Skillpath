@@ -1,5 +1,5 @@
 // src/middleware.ts
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server';
 export async function middleware(request: NextRequest) {
 
   const BACKEND_API_URL =`http://${process.env.NEXT_PUBLIC_BACKEND_HOST}:${process.env.NEXT_PUBLIC_BACKEND_PORT}/user/me`
@@ -33,10 +33,7 @@ if (
   }
   const user = await res.json()
   // Role-based protection
-  if (pathname.startsWith('/admin_dashboard') && user.data.role !== 'admin') {
-    return NextResponse.redirect(new URL('/unauthorized', request.url))
-  }
-  if (pathname.startsWith('/super_admin_dashboard') && user.data.role !== 'superadmin') {
+  if (pathname.startsWith('/user_dashboard') && user.data.role !== 'user') {
     return NextResponse.redirect(new URL('/unauthorized', request.url))
   }
   return NextResponse.next()

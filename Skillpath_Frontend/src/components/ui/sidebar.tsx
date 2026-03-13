@@ -1,8 +1,7 @@
 'use client';
-import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import React from "react";
 
 export interface SidebarItem {
   icon: React.ReactNode;
@@ -29,7 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className="flex flex-col h-full w-64 bg-white-100 py-2 justify-between"
+      className="flex flex-col h-full w-64 bg-blue-50 py-2 justify-between"
       style={{ minHeight: "100vh" }}
     >
       <div>
@@ -80,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Footer User Info */}
-      <div className="flex items-center gap-2 px-4 py-3">
+      {/* <div className="flex items-center gap-2 px-4 py-3">
         <Image
           src={userAvatarUrl}
           alt=""
@@ -89,7 +88,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="rounded-full"
         />
         <span className="text-sm text-gray-700">{userName}</span>
-      </div>
+      </div> */}
     </aside>
   );
 };

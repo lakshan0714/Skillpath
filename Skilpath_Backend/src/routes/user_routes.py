@@ -19,10 +19,10 @@ COOKIE_DOMAIN = settings.COOKIE_DOMAIN
 
 
 @user_router.post("/signup")
-async def signup_route(data: UserCreate, db: AsyncSession = Depends(get_db),current_user: User = Depends(require_roles(UserRole.superadmin))):
+async def signup_route(data: UserCreate, db: AsyncSession = Depends(get_db)):
     """
     Create a new user account.
-    Only SuperAdmin Create Account.
+    
    
     Args:
         data: User creation data
@@ -79,7 +79,7 @@ async def login_route(data: Userlogin, response: Response, db: AsyncSession = De
 
 
 @user_router.get("/me")
-async def get_me(current_user: User = Depends(require_roles([UserRole.superadmin,UserRole.admin]))):
+async def get_me(current_user: User = Depends(require_roles([UserRole.user]))):
     """Get current user profile."""
     return {"data": current_user}
 
@@ -97,26 +97,11 @@ async def logout_route(response: Response, session_id: str = Cookie(None), db: A
         raise HTTPException(status_code=400, detail="No session found")
 
 
-@user_router.get("/users")
-async def get_users_route(current_user: User = Depends(require_roles(UserRole.superadmin)), db: AsyncSession = Depends(get_db)):
-    """Get all users (superadmin only or for user management)."""
-    user_object = UserService(db)
-    try:
-        # Fetch all users
-        users = await user_object.get_users()
-        if not users:
-            raise HTTPException(status_code=404, detail="No users found")
-       
-        return {"data": users}
-    except HTTPException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-
-
 
 @user_router.get("/users/{user_id}")
 async def get_user_by_id_route(
     user_id: int, 
-    current_user: User = Depends(require_roles(UserRole.superadmin)), 
+    current_user: User = Depends(require_roles(UserRole.user)), 
     db: AsyncSession = Depends(get_db)
 ):
     """Get a specific user by ID."""
@@ -134,7 +119,7 @@ async def get_user_by_id_route(
 async def update_user_route(
     user_id: int,
     update_data: UserUpdate,
-    current_user: User = Depends(require_roles(UserRole.superadmin)),
+    current_user: User = Depends(require_roles(UserRole.user)),
     db: AsyncSession = Depends(get_db)
 ):
     """Update a user's information."""
@@ -161,35 +146,12 @@ async def update_user_route(
 
 
 
-@user_router.delete("/users/{user_id}")
-async def delete_user_route(
-    user_id: int,
-    current_user: User = Depends(require_roles(UserRole.superadmin)),
-    db: AsyncSession = Depends(get_db)
-):
-    """Delete a user account."""
-    user_object = UserService(db)
-    
-    try:
-        response = await user_object.delete_user(user_id)
-        if response.get("status_code") == 200:
-            return response
-        else:
-            raise HTTPException(
-                status_code=response.get("status_code", 500), 
-                detail=response.get("error", "An error occurred")
-            )
-    except HTTPException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
-
-
-
 @user_router.put("/users/{user_id}/password")
 async def change_password_route(
     user_id: int,
     password_data: PasswordChange,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_roles(UserRole.superadmin))
+    current_user: User = Depends(require_roles(UserRole.user))
 ):
     """Change a user's password."""
     user_object = UserService(db)
@@ -212,35 +174,3 @@ async def change_password_route(
         raise HTTPException(status_code=e.status_code, detail=e.detail)
 
 
-
-@user_router.put("/admin/users/{user_id}/password")
-async def admin_change_password_route(
-    user_id: int,
-    password_data: AdminPasswordChange,
-   
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_roles(UserRole.superadmin)),
-):
-    """Admin endpoint to change any user's password without requiring old password."""
-    # Check if current user is admin
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    
-    user_object = UserService(db)
-    
-    try:
-        response = await user_object.change_password(
-            user_id, 
-            "", # Empty old password for admin
-            password_data.new_password, 
-            current_user
-        )
-        if response.get("status_code") == 200:
-            return response
-        else:
-            raise HTTPException(
-                status_code=response.get("status_code", 500), 
-                detail=response.get("error", "An error occurred")
-            )
-    except HTTPException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
