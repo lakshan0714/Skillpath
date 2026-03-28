@@ -1,5 +1,6 @@
 "use client";
 
+import { PlanSwitcher } from "@/components/dashboard/PlanSwitcher";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,13 +27,14 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
+import { PlanProvider, usePlanContext } from "@/context/PlanContext";
+import { useState } from "react";
 const navigation = [
   {
     name: "Dashboard",
-    href: "/user_dashboard",
+    href: "/user_dashboard/overview",
     icon: LayoutDashboard,
     exact: true,
   },
@@ -71,7 +73,8 @@ export default function UserDashboardLayout({
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const { planId, setPlanId, activePlans } = usePlanContext();
+  const router = useRouter();
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -92,7 +95,8 @@ export default function UserDashboardLayout({
   );
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+   <PlanProvider>
+     <div className="flex h-screen bg-background overflow-hidden">
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
@@ -124,8 +128,14 @@ export default function UserDashboardLayout({
               <X className="h-5 w-5" />
             </Button>
           </div>
-
-          {/* Navigation */}
+          {/* Plan Switcher */}
+          <div className="px-3 py-3 border-b">
+            <p className="text-xs text-muted-foreground font-medium mb-2 px-1">
+              Current Skill
+            </p>
+            <PlanSwitcher />
+          </div>
+                    {/* Navigation */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => {
               const isActive = item.exact
@@ -254,5 +264,6 @@ export default function UserDashboardLayout({
         </main>
       </div>
     </div>
+   </PlanProvider>
   );
 }

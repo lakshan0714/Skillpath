@@ -29,8 +29,8 @@ export const submitOnboarding = (data: {
 }) => request("/api/onboarding", { method: "POST", body: JSON.stringify(data) });
 
 // ── Dashboard ─────────────────────────────────────
-export const getDashboard = () =>
-  request("/api/dashboard");
+export const getDashboard = (planId?: number) =>
+  request(`/api/dashboard${planId ? `?plan_id=${planId}` : ""}`);
 
 // ── Roadmap ───────────────────────────────────────
 export const getRoadmap = (planId: number) =>
